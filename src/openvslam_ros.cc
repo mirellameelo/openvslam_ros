@@ -48,7 +48,7 @@ void system::publish_pose(const Eigen::Matrix4d& cam_pose_wc, const rclcpp::Time
         try {
             auto camera_to_odom = tf_->lookupTransform(
                 camera_link_, odom_frame_, tf2_ros::fromMsg(builtin_interfaces::msg::Time(stamp)),
-                tf2::durationFromSec(transform_tolerance_));
+                tf2::durationFromSec(0.0));
             Eigen::Affine3d camera_to_odom_affine = tf2::transformToEigen(camera_to_odom.transform);
 
             auto map_to_odom_msg = tf2::eigenToTransform(map_to_camera_affine * camera_to_odom_affine);
@@ -79,7 +79,8 @@ void system::setParams() {
 
     // Timeout related to the transform
     transform_tolerance_ = 0.5;
-    transform_tolerance_ = node_->declare_parameter("transform_timeout", transform_tolerance_);
+    transform_tolerance_ = node_->declare_parameter("transform_tolerance", transform_tolerance_);
+    tmp_tolerance_ = tf2::durationFromSec(transform_tolerance_);
 }
 
 mono::mono(const std::shared_ptr<openvslam::config>& cfg, const std::string& vocab_file_path, const std::string& mask_img_path)
@@ -104,7 +105,8 @@ void mono::callback(const sensor_msgs::msg::Image::ConstSharedPtr& msg) {
     track_times_.push_back(track_time);
 
     if (cam_pose_wc) {
-        publish_pose(*cam_pose_wc, msg->header.stamp);
+        tf2::TimePoint transform_timeout = tf2_ros::fromMsg(msg->header.stamp) + tmp_tolerance_;
+        publish_pose(*cam_pose_wc, tf2_ros::toMsg(transform_timeout));
     }
 }
 
@@ -145,7 +147,8 @@ void stereo::callback(const sensor_msgs::msg::Image::ConstSharedPtr& left, const
     track_times_.push_back(track_time);
 
     if (cam_pose_wc) {
-        publish_pose(*cam_pose_wc, left->header.stamp);
+        tf2::TimePoint transform_timeout = tf2_ros::fromMsg(left->header.stamp) + tmp_tolerance_;
+        publish_pose(*cam_pose_wc, tf2_ros::toMsg(transform_timeout));
     }
 }
 
@@ -180,7 +183,8 @@ void rgbd::callback(const sensor_msgs::msg::Image::ConstSharedPtr& color, const 
     track_times_.push_back(track_time);
 
     if (cam_pose_wc) {
-        publish_pose(*cam_pose_wc, color->header.stamp);
+        tf2::TimePoint transform_timeout = tf2_ros::fromMsg(color->header.stamp) + tmp_tolerance_;
+        publish_pose(*cam_pose_wc, tf2_ros::toMsg(transform_timeout));
     }
 }
 
