@@ -80,7 +80,6 @@ void system::setParams() {
     // Timeout related to the transform
     transform_tolerance_ = 0.5;
     transform_tolerance_ = node_->declare_parameter("transform_tolerance", transform_tolerance_);
-    tmp_tolerance_ = tf2::durationFromSec(transform_tolerance_);
 }
 
 mono::mono(const std::shared_ptr<openvslam::config>& cfg, const std::string& vocab_file_path, const std::string& mask_img_path)
@@ -105,8 +104,8 @@ void mono::callback(const sensor_msgs::msg::Image::ConstSharedPtr& msg) {
     track_times_.push_back(track_time);
 
     if (cam_pose_wc) {
-        tf2::TimePoint transform_timeout = tf2_ros::fromMsg(msg->header.stamp) + tmp_tolerance_;
-        publish_pose(*cam_pose_wc, tf2_ros::toMsg(transform_timeout));
+        tf2::TimePoint transform_timestamp = tf2_ros::fromMsg(msg->header.stamp) + tf2::durationFromSec(transform_tolerance_);
+        publish_pose(*cam_pose_wc, tf2_ros::toMsg(transform_timestamp));
     }
 }
 
@@ -147,8 +146,8 @@ void stereo::callback(const sensor_msgs::msg::Image::ConstSharedPtr& left, const
     track_times_.push_back(track_time);
 
     if (cam_pose_wc) {
-        tf2::TimePoint transform_timeout = tf2_ros::fromMsg(left->header.stamp) + tmp_tolerance_;
-        publish_pose(*cam_pose_wc, tf2_ros::toMsg(transform_timeout));
+        tf2::TimePoint transform_timestamp = tf2_ros::fromMsg(left->header.stamp) + tf2::durationFromSec(transform_tolerance_);
+        publish_pose(*cam_pose_wc, tf2_ros::toMsg(transform_timestamp));
     }
 }
 
@@ -183,8 +182,8 @@ void rgbd::callback(const sensor_msgs::msg::Image::ConstSharedPtr& color, const 
     track_times_.push_back(track_time);
 
     if (cam_pose_wc) {
-        tf2::TimePoint transform_timeout = tf2_ros::fromMsg(color->header.stamp) + tmp_tolerance_;
-        publish_pose(*cam_pose_wc, tf2_ros::toMsg(transform_timeout));
+        tf2::TimePoint transform_timestamp = tf2_ros::fromMsg(color->header.stamp) + tf2::durationFromSec(transform_tolerance_);
+        publish_pose(*cam_pose_wc, tf2_ros::toMsg(transform_timestamp));
     }
 }
 

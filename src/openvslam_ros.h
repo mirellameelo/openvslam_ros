@@ -40,7 +40,6 @@ public:
     std::shared_ptr<tf2_ros::TransformListener> transform_listener_;
     bool publish_tf_;
     double transform_tolerance_;
-    tf2::Duration tmp_tolerance_;
 };
 
 class mono : public system {
